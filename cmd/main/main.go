@@ -1,31 +1,33 @@
 package main
 
 import (
-	"fmt"
-	"log"
 	"net"
 	"net/http"
 	"time"
 
 	"github.com/Braendie/RestAPI/internal/user"
+	"github.com/Braendie/RestAPI/pkg/logging"
 	"github.com/julienschmidt/httprouter"
 )
 
-
-// main creates router, handler and it registers all the handlers by Register().
+// main creates router, handler, logger and it registers all the handlers by Register().
 // it also begins start function, which starts server
 func main() {
-	fmt.Println("create router")
+	logger := logging.GetLogger()
+	logger.Info("create router")
 	router := httprouter.New()
 
-	handler := user.NewHandler()
+	logger.Info("create user handler")
+	handler := user.NewHandler(logger)
 	handler.Register(router)
 
-	start(router)
+	start(router, logger)
 }
 
 // start begins listen and serve
-func start(router *httprouter.Router) {
+func start(router *httprouter.Router, logger logging.Logger) {
+	logger.Info("start application")
+
 	listener, err := net.Listen("tcp", ":8080")
 	if err != nil {
 		panic(err)
@@ -37,5 +39,6 @@ func start(router *httprouter.Router) {
 		ReadTimeout:  15 * time.Second,
 	}
 
-	log.Fatalln(server.Serve(listener))
+	logger.Info("server is listening port 0.0.0.0:8080")
+	logger.Fatal(server.Serve(listener))
 }
