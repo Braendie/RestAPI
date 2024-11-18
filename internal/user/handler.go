@@ -15,17 +15,17 @@ const (
 )
 
 type handler struct {
-	logger logging.Logger
+	logger *logging.Logger
 }
 
-// NewHandler creates new handler and returns its
-func NewHandler(logger logging.Logger) handlers.Handler {
+// NewHandler creates new handler and returns its.
+func NewHandler(logger *logging.Logger) handlers.Handler {
 	return &handler{
 		logger: logger,
 	}
 }
 
-// Register registers all the endpoints of this server
+// Register registers all the endpoints of this server.
 func (h *handler) Register(router *httprouter.Router) {
 	router.GET(usersURL, h.GetList)
 	router.GET(userURL, h.GetUserByUUID)

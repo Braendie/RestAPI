@@ -1,36 +1,66 @@
 package main
 
 import (
+	"fmt"
 	"net"
 	"net/http"
+	"os"
+	"path"
+	"path/filepath"
 	"time"
 
+	"github.com/Braendie/RestAPI/internal/config"
 	"github.com/Braendie/RestAPI/internal/user"
 	"github.com/Braendie/RestAPI/pkg/logging"
 	"github.com/julienschmidt/httprouter"
 )
 
 // main creates router, handler, logger and it registers all the handlers by Register().
-// it also begins start function, which starts server
+// it uses config from config.yml using GetConfig function.
+// it also begins start function, which starts server.
 func main() {
 	logger := logging.GetLogger()
 	logger.Info("create router")
 	router := httprouter.New()
 
+	cfg := config.GetConfig()
+
 	logger.Info("create user handler")
 	handler := user.NewHandler(logger)
 	handler.Register(router)
 
-	start(router, logger)
+	start(router, logger, cfg)
 }
 
-// start begins listen and serve
-func start(router *httprouter.Router, logger logging.Logger) {
+// start begins listen and serve.
+func start(router *httprouter.Router, logger *logging.Logger, cfg *config.Config) {
 	logger.Info("start application")
 
-	listener, err := net.Listen("tcp", ":8080")
-	if err != nil {
-		panic(err)
+	var listener net.Listener
+	var listenErr error
+
+	if cfg.Listen.Type == "sock" {
+		logger.Info("detect app path")
+		appDir, err := filepath.Abs(filepath.Dir(os.Args[0]))
+		if err != nil {
+			logger.Fatal(err)
+		}
+
+		logger.Info("create socket")
+		socketPath := path.Join(appDir, "app.sock")
+		logger.Debugf("socket path: %s", socketPath)
+
+		logger.Info("listen unix socket")
+		listener, listenErr = net.Listen("unix", socketPath)
+		logger.Info("server is listening unix socket")
+	} else {
+		logger.Info("listen tcp")
+		listener, listenErr = net.Listen("tcp", fmt.Sprintf("%s:%s", cfg.Listen.BindIP, cfg.Listen.Port))
+		logger.Infof("server is listening port %s:%s", cfg.Listen.BindIP, cfg.Listen.Port)
+	}
+
+	if listenErr != nil {
+		logger.Fatal(listenErr)
 	}
 
 	server := &http.Server{
@@ -38,7 +68,5 @@ func start(router *httprouter.Router, logger logging.Logger) {
 		WriteTimeout: 15 * time.Second,
 		ReadTimeout:  15 * time.Second,
 	}
-
-	logger.Info("server is listening port 0.0.0.0:8080")
 	logger.Fatal(server.Serve(listener))
 }

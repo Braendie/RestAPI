@@ -10,13 +10,13 @@ import (
 	"github.com/sirupsen/logrus"
 )
 
-// writerHook is a hook from logrus for log data to stdout and file
+// writerHook is a hook from logrus for log data to stdout and file.
 type writerHook struct {
 	Writer    []io.Writer
 	LogLevels []logrus.Level
 }
 
-// Fire is a function for writing data to a file and stdout
+// Fire is a function for writing data to a file and stdout.
 func (hook *writerHook) Fire(entry *logrus.Entry) error {
 	line, err := entry.String()
 	if err != nil {
@@ -29,27 +29,27 @@ func (hook *writerHook) Fire(entry *logrus.Entry) error {
 	return err
 }
 
-// Levels just returns lelels from hook
+// Levels just returns levels from hook.
 func (hook *writerHook) Levels() []logrus.Level {
 	return hook.LogLevels
 }
 
-// it's a standart logger, which returns in GetLogger function
+// it's a standart logger, which returns in GetLogger function.
 var e *logrus.Entry
 
-// Logger is a struct for using different logger's types
+// Logger is a struct for using different logger's types.
 type Logger struct {
 	*logrus.Entry
 }
 
-// GetLogger returns logger
-func GetLogger() Logger {
-	return Logger{e}
+// GetLogger returns a link of logger.
+func GetLogger() *Logger {
+	return &Logger{e}
 }
 
-//GetLoggerWithField returns special logger with field
-func (l *Logger) GetLoggerWithField(k string, v interface{}) Logger {
-	return Logger{l.WithField(k, v)}
+// GetLoggerWithField returns special logger with field.
+func (l *Logger) GetLoggerWithField(k string, v interface{}) *Logger {
+	return &Logger{l.WithField(k, v)}
 }
 
 // init creates logger using logrus library, configures this logger,
