@@ -8,6 +8,10 @@ import (
 	"go.mongodb.org/mongo-driver/mongo/options"
 )
 
+// NewClient creates link to database and returns it for using mongodb database.
+// It can use with authorization or not.
+// To use it without authorization just give username and password "".
+// This function uses mongo-driver/mongo library.
 func NewClient(ctx context.Context, host, port, username, password, database, authDB string) (db *mongo.Database, err error) {
 	var mongoDBURL string
 	var IsAuth bool

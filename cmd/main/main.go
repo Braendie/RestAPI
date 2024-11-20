@@ -1,6 +1,7 @@
 package main
 
 import (
+	"context"
 	"fmt"
 	"net"
 	"net/http"
@@ -11,11 +12,13 @@ import (
 
 	"github.com/Braendie/RestAPI/internal/config"
 	"github.com/Braendie/RestAPI/internal/user"
+	"github.com/Braendie/RestAPI/internal/user/db"
+	"github.com/Braendie/RestAPI/pkg/client/mongodb"
 	"github.com/Braendie/RestAPI/pkg/logging"
 	"github.com/julienschmidt/httprouter"
 )
 
-// main creates router, handler, logger and it registers all the handlers by Register().
+// main creates router, handler, logger, storage and it registers all the handlers by Register().
 // it uses config from config.yml using GetConfig function.
 // it also begins start function, which starts server.
 func main() {
@@ -24,6 +27,13 @@ func main() {
 	router := httprouter.New()
 
 	cfg := config.GetConfig()
+
+	mongoDBClient, err := mongodb.NewClient(context.Background(), cfg.MongoDB.Host, cfg.MongoDB.Port, cfg.MongoDB.Username, cfg.MongoDB.Password, cfg.MongoDB.Database, cfg.MongoDB.AuthDB)
+	if err != nil {
+		panic(err)
+	}
+	
+	storage := db.NewStorage(mongoDBClient, cfg.MongoDB.Collection, logger)
 
 	logger.Info("create user handler")
 	handler := user.NewHandler(logger)
